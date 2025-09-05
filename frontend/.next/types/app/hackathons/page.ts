@@ -1,4 +1,4 @@
-// File: /home/project/app/hackathons/page.tsx
+// File: C:\Users\aksha\Desktop\HackMate\frontend\app\hackathons\page.tsx
 import * as entry from '../../../../app/hackathons/page.js'
 import type { ResolvingMetadata } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

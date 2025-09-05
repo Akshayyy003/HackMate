@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthContext';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,7 +38,6 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,10 +52,14 @@ export default function RegisterPage() {
     }
 
     try {
-      await register(formData);
+      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+
+      // Save token + user to localStorage
+      localStorage.setItem('user', JSON.stringify(res.data));
+
       router.push('/dashboard');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }

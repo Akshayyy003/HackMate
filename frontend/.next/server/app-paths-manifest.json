@@ -1,8 +1,7 @@
 {
   "/page": "app/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
   "/hackathons/page": "app/hackathons/page.js",
-  "/teams/page": "app/teams/page.js",
-  "/profile/page": "app/profile/page.js",
-  "/messages/page": "app/messages/page.js",
-  "/tasks/page": "app/tasks/page.js"
+  "/auth/login/page": "app/auth/login/page.js",
+  "/auth/register/page": "app/auth/register/page.js"
 }
