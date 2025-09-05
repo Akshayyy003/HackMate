@@ -12,16 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
-  User, 
-  Settings, 
-  LogOut, 
-  Moon, 
-  Sun, 
-  Menu, 
-  X,
-  Zap
-} from 'lucide-react';
+import { User, Settings, LogOut, Moon, Sun, Menu, X, Zap } from 'lucide-react';
 
 export function Navigation() {
   const { user, logout } = useAuth();
@@ -79,11 +70,11 @@ export function Navigation() {
             </Button>
 
             {user ? (
-              /* Authenticated user */
+              /* Logged in → show profile dropdown */
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="p-1">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
                       {user.avatar ? (
                         <img
                           src={user.avatar}
@@ -92,7 +83,7 @@ export function Navigation() {
                         />
                       ) : (
                         <span className="text-white text-sm font-medium">
-                          {user.name.charAt(0)}
+                          {user.name?.charAt(0).toUpperCase()}
                         </span>
                       )}
                     </div>
@@ -118,7 +109,7 @@ export function Navigation() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              /* Unauthenticated user */
+              /* Not logged in → show login/signup */
               <div className="hidden md:flex space-x-2">
                 <Link href="/auth/login">
                   <Button variant="ghost">Login</Button>
@@ -163,12 +154,21 @@ export function Navigation() {
                   {link.label}
                 </Link>
               ))}
+
               {!user && (
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                  <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start">Login</Button>
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Button variant="ghost" className="w-full justify-start">
+                      Login
+                    </Button>
                   </Link>
-                  <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
                     <Button className="w-full">Sign Up</Button>
                   </Link>
                 </div>

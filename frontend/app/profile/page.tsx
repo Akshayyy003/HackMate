@@ -5,26 +5,26 @@ import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { SkillBadge } from '@/components/ui/skill-badge';
+import { SkillTest } from '@/components/SkillTest';
 import {
-  User,
-  Mail,
-  Github,
-  Linkedin,
-  Plus,
   Edit3,
   Save,
   X,
+  Plus,
+  Github,
+  Linkedin,
 } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [showSkillTest, setShowSkillTest] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -50,6 +50,26 @@ export default function ProfilePage() {
     });
     setIsEditing(false);
   };
+
+  // when test is completed successfully
+  const handleTestComplete = (score: number, total: number) => {
+    console.log(`✅ Test completed: ${score}/${total}`);
+    // TODO: Call backend to save skill & verification
+    setShowSkillTest(false);
+  };
+
+  // return only test if user clicked "Add"
+  if (showSkillTest) {
+    return (
+      <DashboardLayout>
+        <SkillTest
+          skill="React"
+          onComplete={handleTestComplete}
+          onClose={() => setShowSkillTest(false)}
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -95,138 +115,115 @@ export default function ProfilePage() {
                 <CardTitle>Personal Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Avatar */}
-                <div className="flex items-center space-x-4">
-                  <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    {user?.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt={user.name}
-                        className="w-20 h-20 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-white text-2xl font-bold">
-                        {user?.name.charAt(0)}
-                      </span>
-                    )}
-                  </div>
+                <div className="space-y-4">
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      {user?.name}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300">{user?.role}</p>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <div className={`w-2 h-2 rounded-full ${user?.availability ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        {user?.availability ? 'Available for projects' : 'Not available'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Form Fields */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label>Name</Label>
                     {isEditing ? (
                       <Input
-                        id="name"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
                       />
                     ) : (
-                      <p className="py-2 text-gray-900 dark:text-white">{user?.name}</p>
+                      <p className="text-gray-700 dark:text-gray-300">
+                        {user?.name}
+                      </p>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                  <div>
+                    <Label>Email</Label>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {user?.email}
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label>Bio</Label>
+                    {isEditing ? (
+                      <Textarea
+                        value={formData.bio}
+                        onChange={(e) =>
+                          setFormData({ ...formData, bio: e.target.value })
+                        }
+                      />
+                    ) : (
+                      <p className="text-gray-700 dark:text-gray-300">
+                        {user?.bio || "No bio yet"}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label>GitHub</Label>
                     {isEditing ? (
                       <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        value={formData.github}
+                        onChange={(e) =>
+                          setFormData({ ...formData, github: e.target.value })
+                        }
                       />
                     ) : (
-                      <p className="py-2 text-gray-900 dark:text-white">{user?.email}</p>
+                      user?.github && (
+                        <a
+                          href={user.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-blue-600 hover:underline"
+                        >
+                          <Github className="w-4 h-4 mr-2" />
+                          {user.github}
+                        </a>
+                      )
                     )}
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  {isEditing ? (
-                    <Textarea
-                      id="bio"
-                      placeholder="Tell us about yourself..."
-                      value={formData.bio}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                      rows={3}
-                    />
-                  ) : (
-                    <p className="py-2 text-gray-600 dark:text-gray-300">
-                      {user?.bio || 'No bio available'}
-                    </p>
-                  )}
-                </div>
-
-                {/* Social Links */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="github">GitHub</Label>
+                  <div>
+                    <Label>LinkedIn</Label>
                     {isEditing ? (
-                      <div className="relative">
-                        <Github className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                        <Input
-                          id="github"
-                          placeholder="https://github.com/username"
-                          value={formData.github}
-                          onChange={(e) => setFormData({ ...formData, github: e.target.value })}
-                          className="pl-10"
-                        />
-                      </div>
+                      <Input
+                        value={formData.linkedin}
+                        onChange={(e) =>
+                          setFormData({ ...formData, linkedin: e.target.value })
+                        }
+                      />
                     ) : (
-                      <p className="py-2 text-blue-600 dark:text-blue-400 hover:underline">
-                        {user?.github || 'Not provided'}
-                      </p>
+                      user?.linkedin && (
+                        <a
+                          href={user.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-blue-600 hover:underline"
+                        >
+                          <Linkedin className="w-4 h-4 mr-2" />
+                          {user.linkedin}
+                        </a>
+                      )
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="linkedin">LinkedIn</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Available for Collaboration</Label>
                     {isEditing ? (
-                      <div className="relative">
-                        <Linkedin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                        <Input
-                          id="linkedin"
-                          placeholder="https://linkedin.com/in/username"
-                          value={formData.linkedin}
-                          onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                          className="pl-10"
-                        />
-                      </div>
+                      <Switch
+                        checked={formData.availability}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, availability: checked })
+                        }
+                      />
                     ) : (
-                      <p className="py-2 text-blue-600 dark:text-blue-400 hover:underline">
-                        {user?.linkedin || 'Not provided'}
-                      </p>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          user?.availability
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-200 text-gray-800"
+                        }`}
+                      >
+                        {user?.availability ? "Available" : "Not Available"}
+                      </span>
                     )}
                   </div>
-                </div>
-
-                {/* Availability */}
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="availability" className="text-base">
-                    Available for projects
-                  </Label>
-                  <Switch
-                    id="availability"
-                    checked={isEditing ? formData.availability : user?.availability}
-                    onCheckedChange={(checked) => 
-                      isEditing && setFormData({ ...formData, availability: checked })
-                    }
-                    disabled={!isEditing}
-                  />
                 </div>
 
                 {isEditing && (
@@ -254,7 +251,11 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Skills & Verification
-                  <Button size="sm" variant="outline">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowSkillTest(true)}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add
                   </Button>
@@ -274,11 +275,6 @@ export default function ProfilePage() {
                         verified={skill.verified}
                         className="mb-2"
                       />
-                      {!skill.verified && (
-                        <Button size="xs" variant="outline" className="w-full">
-                          Take Verification Test
-                        </Button>
-                      )}
                     </motion.div>
                   ))}
                 </div>
