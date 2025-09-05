@@ -1,7 +1,8 @@
 {
+  "/not-found": "app/not-found.js",
+  "/hackathons/page": "app/hackathons/page.js",
   "/page": "app/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/hackathons/page": "app/hackathons/page.js",
   "/auth/login/page": "app/auth/login/page.js",
   "/auth/register/page": "app/auth/register/page.js"
 }

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthContext';
+import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,10 +24,20 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const res = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password,
+      });
+
+      // Save token to localStorage
+      localStorage.setItem('token', res.data.token);
+
+      // Redirect to dashboard
       router.push('/dashboard');
-    } catch (err) {
-      setError('Invalid email or password');
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || 'Invalid email or password'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +81,9 @@ export default function LoginPage() {
                   className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center space-x-2"
                 >
                   <AlertCircle className="w-4 h-4 text-red-500" />
-                  <span className="text-red-700 dark:text-red-400 text-sm">{error}</span>
+                  <span className="text-red-700 dark:text-red-400 text-sm">
+                    {error}
+                  </span>
                 </motion.div>
               )}
 
@@ -115,7 +126,7 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <p className="text-gray-600 dark:text-gray-300">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link
                   href="/auth/register"
                   className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
