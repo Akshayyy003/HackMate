@@ -4,12 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, Mail, Lock, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,20 +25,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password,
-      });
-
-      // Save token to localStorage
-      localStorage.setItem('token', res.data.token);
-
-      // Redirect to dashboard
+      await login(email, password);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(
-        err.response?.data?.message || 'Invalid email or password'
-      );
+      setError(err.message || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
@@ -81,9 +72,7 @@ export default function LoginPage() {
                   className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 flex items-center space-x-2"
                 >
                   <AlertCircle className="w-4 h-4 text-red-500" />
-                  <span className="text-red-700 dark:text-red-400 text-sm">
-                    {error}
-                  </span>
+                  <span className="text-red-700 dark:text-red-400 text-sm">{error}</span>
                 </motion.div>
               )}
 

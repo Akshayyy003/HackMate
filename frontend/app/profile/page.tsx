@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,53 +12,60 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { SkillBadge } from '@/components/ui/skill-badge';
 import { SkillTest } from '@/components/SkillTest';
-import {
-  Edit3,
-  Save,
-  X,
-  Plus,
-  Github,
-  Linkedin,
-} from 'lucide-react';
+import { Edit3, Save, X, Plus, Github, Linkedin } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [showSkillTest, setShowSkillTest] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    bio: user?.bio || '',
-    github: user?.github || '',
-    linkedin: user?.linkedin || '',
-    availability: user?.availability || false,
+    name: '',
+    bio: '',
+    github: '',
+    linkedin: '',
+    availability: false,
   });
 
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        bio: user.bio || '',
+        github: user.github || '',
+        linkedin: user.linkedin || '',
+        availability: user.availability || false,
+      });
+    }
+  }, [user]);
+
   const handleSave = async () => {
-    await updateProfile(formData);
-    setIsEditing(false);
+    if (!user) return;
+    try {
+      await updateProfile(formData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+    }
   };
 
   const handleCancel = () => {
-    setFormData({
-      name: user?.name || '',
-      email: user?.email || '',
-      bio: user?.bio || '',
-      github: user?.github || '',
-      linkedin: user?.linkedin || '',
-      availability: user?.availability || false,
-    });
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        bio: user.bio || '',
+        github: user.github || '',
+        linkedin: user.linkedin || '',
+        availability: user.availability || false,
+      });
+    }
     setIsEditing(false);
   };
 
-  // when test is completed successfully
   const handleTestComplete = (score: number, total: number) => {
     console.log(`✅ Test completed: ${score}/${total}`);
-    // TODO: Call backend to save skill & verification
     setShowSkillTest(false);
   };
 
-  // return only test if user clicked "Add"
   if (showSkillTest) {
     return (
       <DashboardLayout>
@@ -126,17 +133,13 @@ export default function ProfilePage() {
                         }
                       />
                     ) : (
-                      <p className="text-gray-700 dark:text-gray-300">
-                        {user?.name}
-                      </p>
+                      <p className="text-gray-700 dark:text-gray-300">{user?.name}</p>
                     )}
                   </div>
 
                   <div>
                     <Label>Email</Label>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      {user?.email}
-                    </p>
+                    <p className="text-gray-700 dark:text-gray-300">{user?.email}</p>
                   </div>
 
                   <div>
@@ -214,11 +217,10 @@ export default function ProfilePage() {
                       />
                     ) : (
                       <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          user?.availability
+                        className={`px-3 py-1 rounded-full text-sm ${user?.availability
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-200 text-gray-800"
-                        }`}
+                          }`}
                       >
                         {user?.availability ? "Available" : "Not Available"}
                       </span>
@@ -231,7 +233,7 @@ export default function ProfilePage() {
                     <Button variant="outline" onClick={handleCancel}>
                       Cancel
                     </Button>
-                    <Button onClick={handleSave}>
+                    <Button onClick={handleSave} disabled={!user}>
                       <Save className="w-4 h-4 mr-2" />
                       Save Changes
                     </Button>
