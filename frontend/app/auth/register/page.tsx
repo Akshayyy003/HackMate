@@ -52,7 +52,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const res = await axios.post('http://localhost:5000/api/users/register', formData);
 
       // Save token + user to localStorage
       localStorage.setItem('user', JSON.stringify(res.data));

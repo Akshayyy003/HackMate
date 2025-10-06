@@ -4,6 +4,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
+const skillRoutes = require("./routes/skills");
 
 dotenv.config();
 connectDB();
@@ -16,7 +17,7 @@ app.use(express.json());
 app.use("/api/users", authRoutes);
 
 app.use("/api/users", userRoutes);
-
+app.use('/api/skills', skillRoutes);
 
 const PORT = process.env.PORT || 5000;
 
