@@ -146,12 +146,42 @@ export function SkillTest({ skill, questions: initialQuestions, onComplete, onCl
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Profile
               </Button>
-              <Button 
-                onClick={() => onComplete(calculateScore(), questions.length, { questions, selectedAnswers })}
-                className="flex-1"
+              <Button
+                onClick={async () => {
+                  const score = calculateScore();
+                  const total = questions.length;
+                  const percentage = (score / total) * 100;
+
+                  // Decide skill level based on performance
+                  let level = "Beginner";
+                  if (percentage >= 90) level = "Expert";
+                  else if (percentage >= 70) level = "Intermediate";
+                  const userId = localStorage.getItem("userId"); 
+
+                  try {
+                    const res = await fetch("http://localhost:5000/api/skills/add", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({userId, skill, level }),
+                    });
+
+                    if (res.ok) {
+                      alert(`${skill} (${level}) added to your profile!`);
+                      onComplete(score, total, { questions, selectedAnswers });
+                    } else {
+                      const data = await res.json();
+                      alert(`Error: ${data.message}`);
+                    }
+                  } catch (err) {
+                    console.error(err);
+                    alert("Failed to add skill to profile");
+                  }
+                }}
+                className="flex-1 bg-green-600 hover:bg-green-700"
               >
                 Add to Profile
               </Button>
+
             </div>
           </CardContent>
         </Card>
@@ -201,7 +231,7 @@ export function SkillTest({ skill, questions: initialQuestions, onComplete, onCl
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-lg">{question.question}</p>
-              
+
               <div className="grid gap-3">
                 {question.options.map((option, index) => (
                   <motion.button
