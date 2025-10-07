@@ -7,6 +7,8 @@ const userRoutes = require("./routes/userRoutes");
 const skillRoutes = require("./routes/skills");
 const hackathonRoutes = require("./routes/hackathons");
 const teamRoutes = require('./routes/teams');
+const usersRouter = require('./routes/users');
+
 dotenv.config();
 connectDB();
 
@@ -15,6 +17,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use('/api/discover', usersRouter);
 app.use("/api/users", authRoutes);
 app.use("/api/hackathons", hackathonRoutes);
 app.use("/api/users", userRoutes);

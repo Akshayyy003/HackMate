@@ -1,5 +1,8 @@
 {
   "/not-found": "app/not-found.js",
-  "/teams/page": "app/teams/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/page": "app/page.js",
+  "/profile/page": "app/profile/page.js",
   "/discover/page": "app/discover/page.js"
 }

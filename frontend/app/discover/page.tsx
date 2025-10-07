@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,69 +24,67 @@ import {
   Users,
 } from 'lucide-react';
 
-const mockUsers = [
-  {
-    id: '2',
-    name: 'Sarah Kim',
-    role: 'UI/UX Designer',
-    bio: 'Creative designer with 4 years of experience in user-centered design',
-    skills: [
-      { name: 'Figma', level: 5, verified: true },
-      { name: 'React', level: 3, verified: true },
-      { name: 'UI Design', level: 5, verified: true },
-    ],
-    availability: true,
-    location: 'San Francisco, CA',
-    timezone: 'PST',
-  },
-  {
-    id: '3',
-    name: 'Mike Johnson',
-    role: 'Data Scientist',
-    bio: 'ML engineer passionate about solving real-world problems with AI',
-    skills: [
-      { name: 'Python', level: 5, verified: true },
-      { name: 'TensorFlow', level: 4, verified: true },
-      { name: 'Machine Learning', level: 5, verified: false },
-    ],
-    availability: true,
-    location: 'New York, NY',
-    timezone: 'EST',
-  },
-  {
-    id: '4',
-    name: 'Emma Davis',
-    role: 'Frontend Developer',
-    bio: 'Frontend specialist focused on performance and accessibility',
-    skills: [
-      { name: 'React', level: 5, verified: true },
-      { name: 'TypeScript', level: 4, verified: true },
-      { name: 'Next.js', level: 4, verified: false },
-    ],
-    availability: false,
-    location: 'London, UK',
-    timezone: 'GMT',
-  },
-];
+interface Skill {
+  id: string;
+  name: string;
+  level: number;
+  verified: boolean;
+}
 
-const roles = ['All Roles', 'Frontend Developer', 'Backend Developer', 'UI/UX Designer', 'Data Scientist', 'Product Manager'];
+interface User {
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  skills: Skill[];
+  availability: boolean;
+  location: string;
+  timezone: string;
+}
+
+const roles = [
+  'All Roles',
+  'Frontend Developer',
+  'Backend Developer',
+  'UI/UX Designer',
+  'Data Scientist',
+  'Product Manager',
+];
 const availabilityOptions = ['All', 'Available', 'Busy'];
 
 export default function DiscoverPage() {
+  const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState('All Roles');
   const [selectedAvailability, setSelectedAvailability] = useState('All');
 
-  const filteredUsers = mockUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.skills.some(skill => skill.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const loggedInUserId = localStorage.getItem('userId'); // get current user
+        const res = await fetch(`http://localhost:5000/api/discover?excludeUserId=${loggedInUserId}`);
+        const data: User[] = await res.json();
+        setUsers(data);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.skills.some(skill => skill.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
     const matchesRole = selectedRole === 'All Roles' || user.role === selectedRole;
-    
-    const matchesAvailability = selectedAvailability === 'All' ||
-                               (selectedAvailability === 'Available' && user.availability) ||
-                               (selectedAvailability === 'Busy' && !user.availability);
+
+    const matchesAvailability =
+      selectedAvailability === 'All' ||
+      (selectedAvailability === 'Available' && user.availability) ||
+      (selectedAvailability === 'Busy' && !user.availability);
 
     return matchesSearch && matchesRole && matchesAvailability;
   });
@@ -94,6 +92,7 @@ export default function DiscoverPage() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -107,6 +106,7 @@ export default function DiscoverPage() {
           </p>
         </motion.div>
 
+        {/* Search and Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -153,6 +153,7 @@ export default function DiscoverPage() {
           </Card>
         </motion.div>
 
+        {/* Users Grid */}
         <motion.div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredUsers.map((user, index) => (
             <motion.div
@@ -164,6 +165,7 @@ export default function DiscoverPage() {
             >
               <Card className="h-full hover:shadow-lg transition-all duration-300">
                 <CardContent className="p-6">
+                  {/* Header */}
                   <div className="flex items-start space-x-4 mb-4">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900 dark:text-white truncate">{user.name}</h3>
@@ -177,10 +179,10 @@ export default function DiscoverPage() {
                     </div>
                   </div>
 
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                    {user.bio}
-                  </p>
+                  {/* Bio */}
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{user.bio}</p>
 
+                  {/* Location and Timezone */}
                   <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400 mb-4">
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-3 h-3" />
@@ -192,19 +194,29 @@ export default function DiscoverPage() {
                     </div>
                   </div>
 
+                  {/* Skills */}
                   <div className="space-y-2 mb-4">
                     <h4 className="text-sm font-medium text-gray-900 dark:text-white">Skills</h4>
                     <div className="flex flex-wrap gap-1">
                       {user.skills.slice(0, 3).map(skill => (
-                        <SkillBadge key={skill.name} {...skill} />
+                        <SkillBadge key={skill.id} {...skill} />
                       ))}
-                      {user.skills.length > 3 && <Badge variant="secondary" className="text-xs">+{user.skills.length - 3} more</Badge>}
+                      {user.skills.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{user.skills.length - 3} more
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
+                  {/* Actions */}
                   <div className="flex space-x-2">
-                    <Button className="flex-1" size="sm"><UserPlus className="w-4 h-4 mr-2" />Invite</Button>
-                    <Button variant="outline" size="sm"><MessageSquare className="w-4 h-4" /></Button>
+                    <Button className="flex-1" size="sm">
+                      <UserPlus className="w-4 h-4 mr-2" />Invite
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <MessageSquare className="w-4 h-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -212,6 +224,7 @@ export default function DiscoverPage() {
           ))}
         </motion.div>
 
+        {/* No Users Found */}
         {filteredUsers.length === 0 && (
           <motion.div className="text-center py-12">
             <Users className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
