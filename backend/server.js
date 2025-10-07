@@ -6,7 +6,7 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const skillRoutes = require("./routes/skills");
 const hackathonRoutes = require("./routes/hackathons");
-
+const teamRoutes = require('./routes/teams');
 dotenv.config();
 connectDB();
 
@@ -19,6 +19,7 @@ app.use("/api/users", authRoutes);
 app.use("/api/hackathons", hackathonRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/skills', skillRoutes);
+app.use('/api/teams', teamRoutes);
 
 const PORT = process.env.PORT || 5000;
 

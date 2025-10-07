@@ -44,24 +44,32 @@ const features = [
 
 const teamMembers = [
   {
-    name: 'Alex Chen',
-    role: 'Founder & CEO',
-    avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=300',
-    bio: 'Former Google engineer passionate about democratizing access to hackathons.',
+    name: 'Akshay Shiyani',
+    role: 'Full Stack Developer',
+    bio: 'A versatile developer proficient in both frontend and backend technologies, passionate about building end-to-end solutions.',
   },
   {
-    name: 'Sarah Kim',
-    role: 'Head of Design',
-    avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=300',
-    bio: 'Design systems expert who believes in the power of great user experiences.',
+    name: 'Mirali Lakhani',
+    role: 'Full Stack Developer',
+    bio: 'Experienced in designing and implementing complete web applications with a focus on performance and usability.',
   },
   {
-    name: 'Mike Johnson',
-    role: 'CTO',
-    avatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=300',
-    bio: 'Full-stack architect with a love for building scalable platforms.',
+    name: 'Saumil Prajapati',
+    role: 'Backend Developer',
+    bio: 'Specializes in server-side development, database design, and creating efficient APIs for scalable applications.',
+  },
+  {
+    name: 'Abhay Jadeja',
+    role: 'Frontend Developer',
+    bio: 'Focused on creating responsive and engaging user interfaces, with expertise in modern frontend frameworks.',
+  },
+  {
+    name: 'Kashish Jinger',
+    role: 'Backend Developer',
+    bio: 'Passionate about building robust server-side applications and optimizing database performance for large-scale projects.',
   },
 ];
+
 
 export default function AboutPage() {
   return (
@@ -174,11 +182,7 @@ export default function AboutPage() {
               >
                 <Card className="h-full hover:shadow-lg transition-all duration-300">
                   <CardContent className="p-6 text-center">
-                    <img
-                      src={member.avatar}
-                      alt={member.name}
-                      className="w-24 h-24 rounded-full object-cover mx-auto mb-4"
-                    />
+                
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
                       {member.name}
                     </h3>

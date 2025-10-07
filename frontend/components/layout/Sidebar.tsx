@@ -12,6 +12,7 @@ import {
   MessageSquare,
   CheckSquare,
   Home,
+  Search, // added for Discover icon
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -21,6 +22,7 @@ const sidebarItems = [
   { icon: Calendar, label: 'Hackathons', href: '/hackathons' },
   { icon: MessageSquare, label: 'Messages', href: '/messages' },
   { icon: CheckSquare, label: 'Tasks', href: '/tasks' },
+  { icon: Search, label: 'Discover', href: '/discover' }, // new item
 ];
 
 export function Sidebar() {
