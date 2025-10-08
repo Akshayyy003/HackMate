@@ -72,6 +72,45 @@ export default function HackathonsPage() {
       });
   };
 
+  // Fetch participants for a hackathon
+  const fetchParticipants = async (hackathonId: string) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/hackathons/${hackathonId}/participants`);
+      if (!res.ok) throw new Error('Failed to fetch participants');
+      const data = await res.json();
+      console.log('Participants:', data);
+      alert(`Participants count: ${data.length}`);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  // Join a hackathon
+  const joinHackathon = async (hackathonId: string) => {
+    try {
+      const token = localStorage.getItem("token"); // assuming you store JWT in localStorage
+  
+      const res = await fetch(`http://localhost:5000/api/hackathons/${hackathonId}/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}), // no body needed if we use req.user._id
+      });
+  
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to join hackathon");
+      }
+  
+      const data = await res.json();
+      alert(data.message);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   useEffect(() => {
     fetchHackathons();
   }, [searchQuery]);
@@ -92,7 +131,6 @@ export default function HackathonsPage() {
   const handleCreateSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    // Ensure required fields have defaults
     const payload = {
       ...newHackathon,
       description: newHackathon.description || "No description provided.",
@@ -124,7 +162,7 @@ export default function HackathonsPage() {
         image: '',
       });
 
-      fetchHackathons(); // refresh list
+      fetchHackathons();
     } catch (err: any) {
       alert(err.message);
     }
@@ -186,7 +224,6 @@ export default function HackathonsPage() {
                 transition={{ duration: 0.5, delay: 0.1 + index * 0.1 }}
               >
                 <Card className="h-full hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-                  {/* Header Image */}
                   <div className="relative h-48">
                     <img
                       src={hackathon.image || 'https://via.placeholder.com/600x400'}
@@ -222,6 +259,8 @@ export default function HackathonsPage() {
                     </div>
                   </CardHeader>
 
+                 
+
                   <CardContent className="space-y-4">
                     <p className="text-gray-600 dark:text-gray-300 text-sm">{hackathon.description}</p>
                     <div className="space-y-2">
@@ -244,11 +283,19 @@ export default function HackathonsPage() {
                       ))}
                     </div>
                     <div className="flex space-x-2 pt-4">
-                      <Button className="flex-1" disabled={hackathon.status !== 'Registration Open'}>
+                      <Button
+                        className="flex-1"
+                        disabled={hackathon.status !== 'Registration Open'}
+                        onClick={() => joinHackathon(hackathon._id)}
+                      >
                         <Trophy className="w-4 h-4 mr-2" />
                         {hackathon.status === 'Registration Open' ? 'Join Hackathon' : 'Registration Closed'}
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchParticipants(hackathon._id)}
+                      >
                         <ExternalLink className="w-4 h-4" />
                       </Button>
                     </div>

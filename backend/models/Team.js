@@ -13,7 +13,7 @@ const teamSchema = new mongoose.Schema({
   neededRoles: { type: [String], default: [] }, // new field
   leaderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   status: { type: String, enum: ['active', 'recruiting'], default: 'active' },
-  hackathon: String,
+  hackathon: { type: String, required: true } 
 }, { timestamps: true });
 
 module.exports = mongoose.model('Team', teamSchema);

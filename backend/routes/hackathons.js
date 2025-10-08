@@ -1,106 +1,131 @@
 const express = require("express");
-const Hackathon = require("../models/Hackathon");
-
 const router = express.Router();
+const Hackathon = require("../models/Hackathon");
+const Team = require("../models/Team");
+const { protect } = require("../middleware/authMiddleware"); 
 
-// GET all hackathons (with optional search query)
+
+// 🧠 Get all hackathons
 router.get("/", async (req, res) => {
-    try {
-        const { search } = req.query;
-        let query = {};
-        if (search) {
-            const regex = new RegExp(search, "i");
-            query = {
-                $or: [
-                    { name: regex },
-                    { description: regex },
-                    { tags: regex }
-                ]
-            };
-        }
-        const hackathons = await Hackathon.find(query).sort({ date: 1 });
-        res.json(hackathons);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const hackathons = await Hackathon.find();
+    res.json(hackathons);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// GET hackathon by ID
-router.get("/:id", async (req, res) => {
-    try {
-        const hackathon = await Hackathon.findById(req.params.id);
-        if (!hackathon) return res.status(404).json({ message: "Hackathon not found" });
-        res.json(hackathon);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// POST create new hackathon
+// 🏗️ Create a new hackathon
 router.post("/", async (req, res) => {
-    try {
-        const {
-            name,
-            description,
-            date,
-            location,
-            type,
-            prize,
-            status,
-            tags,
-            organizer,
-            image,
-        } = req.body;
+  try {
+    const {
+      name,
+      description,
+      date,
+      location,
+      type,
+      prize,
+      status,
+      tags,
+      organizer,
+      image
+    } = req.body;
 
-        // Validate required fields
-        if (!name || !description || !date || !location || !type || !prize || !status || !organizer) {
-            return res.status(400).json({ error: "Missing required fields" });
-        }
+    const hackathon = new Hackathon({
+      name,
+      description,
+      date,
+      location,
+      type,
+      prize,
+      status,
+      tags,
+      organizer,
+      image,
+    });
 
-        // Ensure tags is always an array
-        const hackathon = new Hackathon({
-            name: name || "Unnamed Hackathon",
-            description: description || "No description provided.",
-            date: date ? new Date(date) : new Date(),
-            location: location || "TBD",
-            type: type || "In-Person",
-            prize: prize || "No prize announced",
-            status: status || "Coming Soon",
-            tags: Array.isArray(tags) ? tags : [],
-            organizer: organizer || "Unknown Organizer",
-            image: image || "https://en.wikipedia.org/wiki/Beach",
-            participants: 0,
-            teamsRegistered: 0,
-        });
+    await hackathon.save();
+    res.status(201).json({ success: true, hackathon });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
-        await hackathon.save();
-        res.status(201).json(hackathon);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
+// 🧑‍🤝‍🧑 Join hackathon (team join)
+// router.post("/:id/join", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { teamId } = req.body;
+
+//     const hackathon = await Hackathon.findById(id);
+//     if (!hackathon)
+//       return res.status(404).json({ error: "Hackathon not found" });
+
+//     // Increase participants count
+//     hackathon.participants = (hackathon.participants || 0) + 1;
+//     hackathon.teamsRegistered = (hackathon.teamsRegistered || 0) + 1;
+//     await hackathon.save();
+
+//     res.json({ success: true, message: "Team joined successfully", hackathon });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
+router.post("/:id/join", protect, async (req, res) => {
+  try {
+    console.log("User ID from token:", req.user?._id); // debug
+
+    const hackathonId = req.params.id;
+    const userId = req.user._id;
+
+    const hackathon = await Hackathon.findById(hackathonId);
+    if (!hackathon) return res.status(404).json({ error: "Hackathon not found" });
+
+    // Prevent multiple joins
+    const alreadyJoined = await Team.findOne({ hackathon: hackathonId, "members.userId": userId });
+    if (alreadyJoined) {
+      return res.status(400).json({ error: "You have already joined this hackathon" });
     }
+
+    const team = new Team({
+      name: `${req.user.name}'s Team`,
+      members: [{ userId, name: req.user.name, role: "Leader" }],
+      leaderId: userId,
+      hackathon: hackathonId,
+      status: "active",
+      neededRoles: [],
+    });
+
+    await team.save();
+
+    hackathon.participants = (hackathon.participants || 0) + 1;
+    hackathon.teamsRegistered = (hackathon.teamsRegistered || 0) + 1;
+    await hackathon.save();
+
+    res.json({ success: true, message: "Successfully joined the hackathon", hackathon, team });
+  } catch (err) {
+    console.error("Join Hackathon Error:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 
-// PUT update hackathon
-router.put("/:id", async (req, res) => {
-    try {
-        const hackathon = await Hackathon.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!hackathon) return res.status(404).json({ message: "Hackathon not found" });
-        res.json(hackathon);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-});
 
-// DELETE hackathon
-router.delete("/:id", async (req, res) => {
+router.get("/:id/participants", async (req, res) => {
     try {
-        const hackathon = await Hackathon.findByIdAndDelete(req.params.id);
-        if (!hackathon) return res.status(404).json({ message: "Hackathon not found" });
-        res.json({ message: "Hackathon deleted" });
+      const teams = await Team.find({ hackathon: req.params.id })
+        .populate("leaderId", "name email")
+        .populate("members.userId", "name email");
+  
+      if (!teams || teams.length === 0)
+        return res.status(404).json({ error: "No participants found" });
+  
+      res.json(teams);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+      res.status(500).json({ error: err.message });
     }
-});
+  });
+  
 
 module.exports = router;
