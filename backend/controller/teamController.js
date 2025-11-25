@@ -1,4 +1,5 @@
 const Team = require('../models/Team');
+const mongoose = require('mongoose');
 
 // Get all teams for a user
 exports.getUserTeams = async (req, res) => {
@@ -15,10 +16,14 @@ exports.getUserTeams = async (req, res) => {
 exports.createTeam = async (req, res) => {
   try {
     let { name, description, members, leaderId, neededRoles, status, hackathon } = req.body;
+    console.log("hii");
+    
 
     // Convert string IDs to ObjectId
-    leaderId = mongoose.Types.ObjectId(leaderId);
-    members = members.map(m => ({ ...m, userId: mongoose.Types.ObjectId(m.userId) }));
+    leaderId = new mongoose.Types.ObjectId(leaderId);
+    members = members.map(m => ({ ...m, userId: new mongoose.Types.ObjectId(m.userId) }));
+    console.log("hello");
+    
 
     // members should at least include the leader
     const leaderMember = members.length > 0 ? members[0] : { userId: leaderId, name: 'Leader', role: 'Leader' };

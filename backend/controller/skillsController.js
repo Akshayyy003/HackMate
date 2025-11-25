@@ -1,7 +1,7 @@
 const axios = require('axios');
-const User = require('../models/User'); // adjust path to your User model
+const User = require('../models/User');
 
-// Helper: call QuizAPI
+
 async function fetchFromQuizApi(topic, limit = 10) {
   const API_KEY = process.env.QUIZAPI_KEY;
   if (!API_KEY) throw new Error('QUIZAPI_KEY not configured');

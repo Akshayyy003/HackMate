@@ -18,7 +18,8 @@ import {
 const sidebarItems = [
   { icon: Home, label: 'Dashboard', href: '/dashboard' },
   { icon: User, label: 'Profile', href: '/profile' },
-  { icon: Users, label: 'Teams', href: '/teams' },
+  { icon: Users, label: 'Your Teams', href: '/teams' },
+  { icon: Users, label: 'Join Teams', href: '/teamsJoin' },
   { icon: Calendar, label: 'Hackathons', href: '/hackathons' },
   { icon: MessageSquare, label: 'Messages', href: '/messages' },
   { icon: CheckSquare, label: 'Tasks', href: '/tasks' },
