@@ -7,7 +7,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { SkillBadge } from '@/components/ui/skill-badge';
 import {
   Select,
   SelectContent,
@@ -15,239 +14,218 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
 import {
   Search,
   UserPlus,
-  MessageSquare,
   MapPin,
-  Clock,
   Users,
 } from 'lucide-react';
 
-interface Skill {
-  id: string;
-  name: string;
-  level: number;
-  verified: boolean;
-}
-
-interface User {
-  id: string;
+interface TeamMember {
+  userId: string;
   name: string;
   role: string;
-  bio: string;
-  skills: Skill[];
-  availability: boolean;
-  location: string;
-  timezone: string;
 }
 
-const roles = [
-  'All Roles',
-  'Frontend Developer',
-  'Backend Developer',
-  'UI/UX Designer',
-  'Data Scientist',
-  'Product Manager',
-];
+interface Team {
+  _id: string;
+  name: string;
+  description: string;
+  members: TeamMember[];
+  neededRoles: string[];
+  status: string;
+  hackathon: string;
+}
 
-const availabilityOptions = ['All', 'Available', 'Busy'];
-
-export default function teamsJoin() {
-  const [users, setUsers] = useState<User[]>([]);
+export default function TeamsJoin() {
+  const [teams, setTeams] = useState<Team[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState('All Roles');
-  const [selectedAvailability, setSelectedAvailability] = useState('All');
 
-  const loggedInUserId = localStorage.getItem('userId');
+  const roles = [
+    'All Roles',
+    'Frontend Developer',
+    'Backend Developer',
+    'UI/UX Designer',
+    'Data Scientist',
+    'Product Manager',
+  ];
 
-  // Fetch users from backend
+  const loggedInUserId = typeof window !== 'undefined'
+    ? localStorage.getItem('userId')
+    : null;
+
+  // Fetch all teams
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchTeams = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/teams/' + loggedInUserId ); // Adjust endpoint
-        const data: User[] = await res.json();
-        setUsers(data);
+        const res = await fetch('http://localhost:5000/api/teams');
+        const result = await res.json();
+
+        if (result.success) {
+          setTeams(result.teams);
+        }
       } catch (err) {
         console.error(err);
       }
     };
 
-    fetchUsers();
+    fetchTeams();
   }, []);
 
-  // Filter users
-  const filteredUsers = users
-    .filter(user => user.availability) // Only available
-    .filter(user => user.id !== loggedInUserId) // Exclude self
-    .filter(user => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.skills.some(skill =>
-          skill.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+  // Join team
+  const joinTeam = async (teamId: string) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/teams/${teamId}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: loggedInUserId,
+          role: selectedRole !== "All Roles" ? selectedRole : "Member"
+        })
+      });
 
-      const matchesRole = selectedRole === 'All Roles' || user.role === selectedRole;
+      const data = await res.json();
 
-      const matchesAvailability =
-        selectedAvailability === 'All' ||
-        (selectedAvailability === 'Available' && user.availability) ||
-        (selectedAvailability === 'Busy' && !user.availability);
+      if (data.success) {
+        alert("You joined the team!");
+        window.location.reload();
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Failed to join team");
+    }
+  };
 
-      return matchesSearch && matchesRole && matchesAvailability;
-    });
+  // Filter teams
+  const filteredTeams = teams.filter(team => {
+    const matchesSearch =
+      team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      team.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesRole =
+      selectedRole === 'All Roles' ||
+      team.neededRoles.includes(selectedRole);
+
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Discover Teams
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Find teams with talented and available teammates to join
+          <h1 className="text-3xl font-bold">Join a Team</h1>
+          <p className="text-gray-600 mt-2">
+            Explore hackathon teams looking for new members
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Search by name, role, or skills..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map(role => (
-                        <SelectItem key={role} value={role}>
-                          {role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={selectedAvailability}
-                    onValueChange={setSelectedAvailability}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availabilityOptions.map(option => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        {/* Filters */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search */}
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search teams..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map(role => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Teams list */}
         <motion.div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUsers.map((user, index) => (
-            <motion.div
-              key={user.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 + index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <Card className="h-full hover:shadow-lg transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4 mb-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                        {user.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        {user.role}
-                      </p>
-                      <div className="flex items-center space-x-1 mt-1">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            user.availability ? 'bg-green-500' : 'bg-gray-400'
-                          }`}
-                        ></div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {user.availability ? 'Available' : 'Busy'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+          {filteredTeams.map((team, index) => {
+            const alreadyMember = team.members.some(
+              m => m.userId === loggedInUserId
+            );
 
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                    {user.bio}
-                  </p>
-
-                  <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400 mb-4">
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="w-3 h-3" />
-                      <span>{user.location}</span>
+            return (
+              <motion.div
+                key={team._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.07 }}
+              >
+                <Card className="hover:shadow-md duration-300">
+                  <CardContent className="p-5 space-y-4">
+                    {/* Title */}
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold">{team.name}</h2>
+                      <Badge>
+                        {team.status === "recruiting" ? "Recruiting" : "Active"}
+                      </Badge>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="w-3 h-3" />
-                      <span>{user.timezone}</span>
-                    </div>
-                  </div>
 
-                  <div className="space-y-2 mb-4">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-                      Skills
-                    </h4>
-                    <div className="flex flex-wrap gap-1">
-                      {user.skills.slice(0, 3).map(skill => (
-                        <SkillBadge key={skill.name} {...skill} />
-                      ))}
-                      {user.skills.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{user.skills.length - 3} more
+                    <p className="text-sm text-gray-600">{team.description}</p>
+
+                    <div className="flex gap-2 flex-wrap">
+                      {team.neededRoles.map(role => (
+                        <Badge key={role} variant="secondary">
+                          {role}
                         </Badge>
-                      )}
+                      ))}
                     </div>
-                  </div>
 
-                  <div className="flex space-x-2">
-                    <Button className="flex-1" size="sm">
-                      <UserPlus className="w-4 h-4 mr-2" />Invite
+                    <div className="flex items-center text-sm gap-2 text-gray-500">
+                      <MapPin size={14} />
+                      <span>{team.hackathon}</span>
+                    </div>
+
+                    <p className="text-xs text-gray-500">
+                      Members: {team.members.length}
+                    </p>
+
+                    {/* Join button */}
+                    <Button
+                      disabled={alreadyMember}
+                      onClick={() => joinTeam(team._id)}
+                      className="w-full"
+                    >
+                      <UserPlus className="mr-2" size={16} />
+                      {alreadyMember ? "Joined" : "Join Team"}
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <MessageSquare className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </motion.div>
 
-        {filteredUsers.length === 0 && (
-          <motion.div className="text-center py-12">
-            <Users className="w-16 h-16 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
-            <p className="text-lg font-medium">No teams found</p>
-            <p className="text-sm">Try adjusting your search criteria</p>
+        {filteredTeams.length === 0 && (
+          <motion.div
+            className="text-center py-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <Users className="mx-auto mb-4 text-gray-400" size={48} />
+            <h3 className="text-lg font-medium">No Teams Found</h3>
+            <p className="text-sm text-gray-500">Try adjusting your filters</p>
           </motion.div>
         )}
       </div>
